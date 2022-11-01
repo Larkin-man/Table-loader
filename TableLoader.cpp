@@ -171,7 +171,7 @@ int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
    catch (...)
    {
       delete file;
-      throw EFOpenError("Cannot open "+Filename);
+      //throw EFOpenError("Cannot open "+Filename);
    }
    if (file->Count <= 1)
    {
