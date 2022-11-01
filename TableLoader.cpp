@@ -12,6 +12,8 @@
 //#include <stdarg.h>
 //#include <Dialogs.hpp>
 #include <Classes.hpp>
+//#include <ustring.h>
+//#include <UnicodeString>
 #pragma hdrstop
 #include "TableLoader.h"
 //-----------------------------------------------------------------------
@@ -35,7 +37,7 @@ __fastcall TableLoader::TableLoader()
 }
 //-----------------------------------------------------------------------
 //[секция] ... это список ссылок, также как в LoadFromFile. Возвращает кол-во строк в секции
-int TableLoader::GetSection(const AnsiString SectionName, ...)
+int TableLoader::GetSection(const UnicodeString SectionName, ...)
 {
    if (FSectionCount == 0)      return -1;
    int sSize = FRowCount, sPos = 0;
@@ -49,7 +51,7 @@ int TableLoader::GetSection(const AnsiString SectionName, ...)
             break;
          }
    }
-   int **intArg;   char **charArg;  AnsiString **strArg;   bool **boolArg;
+   int **intArg;   char **charArg;  UnicodeString **strArg;   bool **boolArg;
    int CurrI=0, CurrC=0, CurrA=0, CurrB=0;
    va_list ap;
    va_start(ap, SectionName);
@@ -67,7 +69,7 @@ int TableLoader::GetSection(const AnsiString SectionName, ...)
                *charArg = MemChar[CurrC++] + sPos;
          break;
          case 's':
-            if ((strArg = va_arg(ap, AnsiString**)) != 0)
+            if ((strArg = va_arg(ap, UnicodeString**)) != 0)
                *strArg = MemStr[CurrA++] + sPos;
          break;
          case 'b':
@@ -83,7 +85,7 @@ int TableLoader::GetSection(const AnsiString SectionName, ...)
    return sSize;
 }
 //-----------------------------------------------------------------------
-int TableLoader::RegColumn(int* &Field, int ColNum, const AnsiString SectionName)
+int TableLoader::RegColumn(int* &Field, int ColNum, const UnicodeString SectionName)
 {
    --ColNum;
    if (ColNum < 0)      return -1;
@@ -103,7 +105,7 @@ int TableLoader::RegColumn(int* &Field, int ColNum, const AnsiString SectionName
    return FRowCount;
 }
 //-----------------------------------------------------------------------
-int TableLoader::RegColumn(char* &Field, int ColNum, const AnsiString SectionName)
+int TableLoader::RegColumn(char* &Field, int ColNum, const UnicodeString SectionName)
 {
    --ColNum;
    if (ColNum < 0)      return -1;
@@ -123,7 +125,7 @@ int TableLoader::RegColumn(char* &Field, int ColNum, const AnsiString SectionNam
    return FRowCount;
 }
 //-----------------------------------------------------------------------
-int TableLoader::RegColumn(AnsiString* &Field, int ColNum, const AnsiString SectionName)
+int TableLoader::RegColumn(UnicodeString* &Field, int ColNum, const UnicodeString SectionName)
 {
    --ColNum;
    if (ColNum < 0)      return -1;
@@ -143,7 +145,7 @@ int TableLoader::RegColumn(AnsiString* &Field, int ColNum, const AnsiString Sect
    return FRowCount;
 }
 //-----------------------------------------------------------------------
-int TableLoader::RegColumn(bool* &Field, int ColNum, const AnsiString SectionName)
+int TableLoader::RegColumn(bool* &Field, int ColNum, const UnicodeString SectionName)
 {
    --ColNum;
    if (ColNum < 0)      return -1;
@@ -164,13 +166,14 @@ int TableLoader::RegColumn(bool* &Field, int ColNum, const AnsiString SectionNam
 }
 //-----------------------------------------------------------------------
 //Загрузка из файла, format: i-int c-char s-Ansi b-bool, ... список ссылок на переменные
-int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
+int TableLoader::LoadFromFile(UnicodeString Filename, const char *format, ...)
 {
    TStringList *file = new TStringList;
    try { file->LoadFromFile(Filename);     }
    catch (...)
    {
-      delete file;
+		delete file;
+		return 0;
       //throw EFOpenError("Cannot open "+Filename);
    }
    if (file->Count <= 1)
@@ -200,10 +203,10 @@ int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
          if (str.Pos(']') > 0)
          {
             SectionEnsureCapacity(FSectionCount+1);
-            //AnsiString g = str.SubString(2, str.Pos(']')-2);
+            //UnicodeString g = str.SubString(2, str.Pos(']')-2);
             FSections[FSectionCount].Pos = i;
             //strcpy(FSections[SectionCount].Name, g.c_str());
-            FSections[FSectionCount].Name = new AnsiString(str.SubString(2, str.Pos(']')-2));
+            FSections[FSectionCount].Name = new UnicodeString(str.SubString(2, str.Pos(']')-2));
             FSectionCount++;
             str = "";    
          }
@@ -254,9 +257,9 @@ int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
    }
    if (maxstrings > 0)
    {
-      MemStr = new AnsiString* [maxstrings];
+      MemStr = new UnicodeString* [maxstrings];
       for (int i=0; i<maxstrings; ++i)
-         MemStr[i] = new AnsiString[FRowCount];
+         MemStr[i] = new UnicodeString[FRowCount];
    }
    if (maxbools > 0)
    {
@@ -338,7 +341,7 @@ int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
    }   */
    int **intArg;
    char **charArg;
-   AnsiString **strArg;
+   UnicodeString **strArg;
    bool **boolArg;
    va_list ap;
    va_start(ap, format);
@@ -356,7 +359,7 @@ int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
                *charArg = MemChar[CharCount++];
          break;
          case 's':
-            if ((strArg = va_arg(ap, AnsiString**)) != 0)
+            if ((strArg = va_arg(ap, UnicodeString**)) != 0)
                *strArg = MemStr[StrCount++];
          break;
          case 'b':
@@ -438,11 +441,11 @@ void __fastcall TableLoader::Clear()
    FColCount = 0;
 }
 //-----------------------------------------------------------------------
-void TableLoader::AddRowToSection(AnsiString SectionName, AnsiString text, int Pos)
+void TableLoader::AddRowToSection(UnicodeString SectionName, UnicodeString text, int Pos)
 {
 }
 //------------------------------------------------------------------------
-TableLoader::Section* TableLoader::FindSection(AnsiString SectionName)
+TableLoader::Section* TableLoader::FindSection(UnicodeString SectionName)
 {
    for (int i=0; i<FSectionCount; ++i)
       if (SectionName == *FSections[i].Name)

@@ -18,7 +18,7 @@ class TableLoader
 private:
    char *FFormat;
    //Mem обязательно [Count][FRowCount]
-   AnsiString **MemStr;
+   String **MemStr;
    int **MemInt;
    char **MemChar;
    bool **MemBool;
@@ -29,7 +29,7 @@ private:
 protected:    
    struct Section
    {
-      AnsiString *Name;
+      String *Name;
       int Pos; //Позиция секции с 0
       int Size;//Кол-во строк
    } *FSections;
@@ -44,20 +44,20 @@ public:
    __property int ColCount = {read = FColCount};
    __property int SectionCount = {read = FSectionCount};
    __property Section* Sections = {read = FSections};
-   Section* FindSection(AnsiString SectionName);
+   Section* FindSection(String SectionName);
    bool IgnoreFirstString; //Игнорировать первую сроку в файле. defaul=true
    bool IgnoreDelimitersPack; //Игнорировать разделители, идущие подряд. defauly=true
    char Delimiter;      //Разделитель столбцов (табуляция)
-   void AddRowToSection(AnsiString SectionName, AnsiString text, int Pos);
+   void AddRowToSection(String SectionName, String text, int Pos);
    //Загрузка из файла, format: i-int c-char s-Ansi b-bool, ... список ссылок на переменные
-   int LoadFromFile(AnsiString Filename, const char *format, ...);
+   int LoadFromFile(String Filename, const char *format, ...);
    //[секция] ... это список ссылок, также как в LoadFromFile. Возвращает кол-во строк в секции
-   int GetSection(const AnsiString SectionName, ...);
+   int GetSection(const String SectionName, ...);
    //RegColumn - устанавливает ссылку на столбец в секции. ColNum - Номер столбца соотв типа. Возвращает кол-во строк в секции
-   int RegColumn(int* &Field, int ColNum, const AnsiString SectionName = "");
-   int RegColumn(char* &Field, int ColNum, const AnsiString SectionName = "");
-   int RegColumn(AnsiString* &Field, int ColNum, const AnsiString SectionName = "");
-   int RegColumn(bool* &Field, int ColNum, const AnsiString SectionName = "");
+   int RegColumn(int* &Field, int ColNum, const String SectionName = "");
+   int RegColumn(char* &Field, int ColNum, const String SectionName = "");
+   int RegColumn(String* &Field, int ColNum, const String SectionName = "");
+   int RegColumn(bool* &Field, int ColNum, const String SectionName = "");
    void __fastcall Clear();
    __fastcall ~TableLoader();   
 };
