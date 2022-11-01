@@ -1,7 +1,17 @@
+// Copyright 2022 Larkin
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//     http://www.apache.org/licenses/LICENSE-2.0
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// See the License for the specific language governing permissions and
+// limitations under the License.
 //---------------------------------------------------------------------------
 //#include <stdio.h> //для printf
 //#include <stdarg.h>
 //#include <Dialogs.hpp>
+#include <Classes.hpp>
 #pragma hdrstop
 #include "TableLoader.h"
 //-----------------------------------------------------------------------
@@ -12,8 +22,9 @@ __fastcall TableLoader::TableLoader()
    MemChar = NULL;
    MemBool = NULL;
    StrCount = 0; IntCount = 0; CharCount = 0; BoolCount = 0;
-   Size = 0;
+   FRowCount = 0;
    IgnoreFirstString = true;
+   IgnoreDelimitersPack = true;
    FFormat = NULL;
    //Vars = NULL;
    Delimiter = '\t';
@@ -27,7 +38,7 @@ __fastcall TableLoader::TableLoader()
 int TableLoader::GetSection(const AnsiString SectionName, ...)
 {
    if (FSectionCount == 0)      return -1;
-   int sSize = Size, sPos = 0;
+   int sSize = FRowCount, sPos = 0;
    if (SectionName != "" )
    {
       for (int i=0; i<FSectionCount; ++i)
@@ -89,7 +100,7 @@ int TableLoader::RegColumn(int* &Field, int ColNum, const AnsiString SectionName
    }
    else
       Field = MemInt[ColNum];
-   return Size;
+   return FRowCount;
 }
 //-----------------------------------------------------------------------
 int TableLoader::RegColumn(char* &Field, int ColNum, const AnsiString SectionName)
@@ -109,7 +120,7 @@ int TableLoader::RegColumn(char* &Field, int ColNum, const AnsiString SectionNam
    }
    else
       Field = MemChar[ColNum];
-   return Size;
+   return FRowCount;
 }
 //-----------------------------------------------------------------------
 int TableLoader::RegColumn(AnsiString* &Field, int ColNum, const AnsiString SectionName)
@@ -129,7 +140,7 @@ int TableLoader::RegColumn(AnsiString* &Field, int ColNum, const AnsiString Sect
    }
    else
       Field = MemStr[ColNum];
-   return Size;
+   return FRowCount;
 }
 //-----------------------------------------------------------------------
 int TableLoader::RegColumn(bool* &Field, int ColNum, const AnsiString SectionName)
@@ -149,7 +160,7 @@ int TableLoader::RegColumn(bool* &Field, int ColNum, const AnsiString SectionNam
    }
    else
       Field = MemBool[ColNum];
-   return Size;
+   return FRowCount;
 }
 //-----------------------------------------------------------------------
 //Загрузка из файла, format: i-int c-char s-Ansi b-bool, ... список ссылок на переменные
@@ -167,7 +178,7 @@ int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
       delete file;
       return 0;
    }
-   if (Size > 0)
+   if (FRowCount > 0)
    {//тут должно быть удаление
       //~TableLoader();
       Clear();
@@ -175,14 +186,14 @@ int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
    //Нужно пробежаться по файлу и удалить лишние строки
    if (IgnoreFirstString)
       file->Delete(0); //Первая лишняя
-   Size = file->Count;
+   FRowCount = file->Count;
    String str;
    for (int i=0; i<file->Count; i++)
    {
       str = file->Strings[i];
       if (str == "[end]")
       {
-         Size = i;
+         FRowCount = i;
          break;
       }
       if ((!str.IsEmpty())&&(str[1] == '['))
@@ -199,18 +210,19 @@ int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
       if (str.IsEmpty())  //Пустую строку удалить, будто её нет
       {  //ShowMessage("Удаляем пустую строку №"+IntToStr(i));
          file->Delete(i);
-         Size--;
+         FRowCount--;
          i--;
          continue;  //Это если пустые строки в конце документа
       }
    }
+   //Установить размер секций
    if (FSectionCount > 0)
    {
       for (int i=0; i<FSectionCount-1; ++i)
          FSections[i].Size = FSections[i+1].Pos - FSections[i].Pos;
-      FSections[FSectionCount-1].Size = Size - FSections[FSectionCount-1].Pos;
+      FSections[FSectionCount-1].Size = FRowCount - FSections[FSectionCount-1].Pos;
    }
-   //for (int i=0; i<Size; ++i)
+   //for (int i=0; i<FRowCount; ++i)
    //   printf("%s\n",file->Strings[i]);
    //----vars-------------
    int maxints=0, maxchars=0, maxstrings=0, maxbools=0 ;
@@ -232,25 +244,25 @@ int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
    {
       MemInt = new int*[maxints];
       for (int i=0; i<maxints; ++i)
-         MemInt[i] = new int[Size];
+         MemInt[i] = new int[FRowCount];
    }
    if (maxchars > 0)
    {
       MemChar = new char*[maxchars];
       for (int i=0; i<maxchars; ++i)
-         MemChar[i] = new char[Size];
+         MemChar[i] = new char[FRowCount];
    }
    if (maxstrings > 0)
    {
       MemStr = new AnsiString* [maxstrings];
       for (int i=0; i<maxstrings; ++i)
-         MemStr[i] = new AnsiString[Size];
+         MemStr[i] = new AnsiString[FRowCount];
    }
    if (maxbools > 0)
    {
       MemBool = new bool* [maxbools];
       for (int i=0; i<maxbools; ++i)
-         MemBool[i] = new bool[Size];
+         MemBool[i] = new bool[FRowCount];
    }
    //-----------------------------------------------
    //Началось считывание файл и разбор по словам
@@ -258,13 +270,13 @@ int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
    int p;   //Индекс разделителя
    String word;   //Это отдельные слова
    int curr, currstr, currint, currchar, currbool;
-   for (int i=0; i<Size; ++i)
+   for (int i=0; i<FRowCount; ++i)
    {
       curr=0; currstr=0; currint=0; currchar=0; currbool=0;
       str = file->Strings[i];
       while (str.Length() != 0)  //Вот цикл отделяющий слова
       {
-         if (str[1] == Delimiter) //Для отсеивания лишних разделителей
+         if ( (IgnoreDelimitersPack)&&(str[1] == Delimiter) ) //Для отсеивания лишних разделителей
          {
             str.Delete(1,1);
             continue;
@@ -357,7 +369,7 @@ int TableLoader::LoadFromFile(AnsiString Filename, const char *format, ...)
    }
     //throw EDBEditError("fefe");
    va_end(ap);
-   return Size;       /////////*/
+   return FRowCount;       /////////*/
 }
 //-----------------------------------------------------------------------
 void TableLoader::SectionEnsureCapacity(int count)
@@ -422,10 +434,22 @@ void __fastcall TableLoader::Clear()
       MemStr = NULL;
       StrCount = 0;
    }
-   Size = 0;
+   FRowCount = 0;
    FColCount = 0;
 }
 //-----------------------------------------------------------------------
+void TableLoader::AddRowToSection(AnsiString SectionName, AnsiString text, int Pos)
+{
+}
+//------------------------------------------------------------------------
+TableLoader::Section* TableLoader::FindSection(AnsiString SectionName)
+{
+   for (int i=0; i<FSectionCount; ++i)
+      if (SectionName == *FSections[i].Name)
+         return &FSections[i];
+   return NULL;
+}
+//------------------------------------------------------------------------
 __fastcall TableLoader::~TableLoader()
 {
    Clear();
