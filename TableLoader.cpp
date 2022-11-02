@@ -51,11 +51,11 @@ int TableLoader::GetSection(const UnicodeString SectionName, ...)
             break;
          }
    }
-   int **intArg;   char **charArg;  UnicodeString **strArg;   bool **boolArg;
+   int **intArg;   lrchar **lrcharArg;  UnicodeString **strArg;   bool **boolArg;
    int CurrI=0, CurrC=0, CurrA=0, CurrB=0;
    va_list ap;
    va_start(ap, SectionName);
-   char t = FFormat[0];
+   lrchar t = FFormat[0];
    for (int i=0; t!='\0'; t = FFormat[++i])
    {
       switch (t)
@@ -65,8 +65,8 @@ int TableLoader::GetSection(const UnicodeString SectionName, ...)
                *intArg = MemInt[CurrI++] + sPos;
          break;
          case 'c':
-            if ((charArg = va_arg(ap, char**)) != 0)
-               *charArg = MemChar[CurrC++] + sPos;
+            if ((lrcharArg = va_arg(ap, lrchar**)) != 0)
+               *lrcharArg = MemChar[CurrC++] + sPos;
          break;
          case 's':
             if ((strArg = va_arg(ap, UnicodeString**)) != 0)
@@ -76,7 +76,7 @@ int TableLoader::GetSection(const UnicodeString SectionName, ...)
             if ((boolArg = va_arg(ap, bool**)) != 0)
                *boolArg = MemBool[CurrB++] + sPos;
          break;
-         //default:    va_arg(ap, char);
+         //default:    va_arg(ap, lrchar);
       }
       //(1)
    }
@@ -105,7 +105,7 @@ int TableLoader::RegColumn(int* &Field, int ColNum, const UnicodeString SectionN
    return FRowCount;
 }
 //--------------------------------------------------------------------
-int TableLoader::RegColumn(char* &Field, int ColNum, const UnicodeString SectionName)
+int TableLoader::RegColumn(lrchar* &Field, int ColNum, const UnicodeString SectionName)
 {
    --ColNum;
    if (ColNum < 0)      return -1;
@@ -165,7 +165,7 @@ int TableLoader::RegColumn(bool* &Field, int ColNum, const UnicodeString Section
    return FRowCount;
 }
 //--------------------------------------------------------------------
-//Загрузка из файла, format: i-int c-char s-Ansi b-bool, ... список ссылок на переменные
+//Загрузка из файла, format: i-int c-lrchar s-Ansi b-bool, ... список ссылок на переменные
 int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *format, ...)
 {
 	TStringList *file = new TStringList;
@@ -175,8 +175,7 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
 		catch (...)
 		{
 			delete file;
-			return 0;
-			//throw EFOpenError("Cannot open "+Filename);
+			throw;
 		}
 	} else //Resource
 	{
@@ -189,8 +188,7 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
 		catch (...)
 		{
 			delete file;
-			return 0;
-			//throw EFOpenError("Cannot open "+Filename);
+			throw;
 		}
    }
    if (file->Count <= 1)
@@ -245,23 +243,23 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
    //for (int i=0; i<FRowCount; ++i)
    //   printf("%s\n",file->Strings[i]);
    //----vars-------------
-   int maxints=0, maxchars=0, maxstrings=0, maxbools=0 ;
+   int maxints=0, maxlrchars=0, maxstrings=0, maxbools=0 ;
    //Разбор строки формата
-   FFormat = strdup(format);
+	FFormat = strdup(format);
    for (unsigned int i=0; i<strlen(format); ++i)
       switch (format[i])
 		{
 			case 'I':
 			case 'i': maxints++; break;
 			case 'C':
-			case 'c': maxchars++; break;
+			case 'c': maxlrchars++; break;
 			case 'S':
 			case 's': maxstrings++; break;
 			case 'B':
 			case 'b': maxbools++; break;
          default: FFormat[i] = '0';
       }
-   FColCount += maxints; FColCount += maxchars; FColCount += maxstrings; FColCount += maxbools;
+   FColCount += maxints; FColCount += maxlrchars; FColCount += maxstrings; FColCount += maxbools;
    //----------------------
    //Создание массивов по кооличеству строк в файле
    if (maxints > 0)
@@ -270,11 +268,11 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
       for (int i=0; i<maxints; ++i)
          MemInt[i] = new int[FRowCount];
    }
-   if (maxchars > 0)
+   if (maxlrchars > 0)
    {
-      MemChar = new char*[maxchars];
-      for (int i=0; i<maxchars; ++i)
-         MemChar[i] = new char[FRowCount];
+      MemChar = new lrchar*[maxlrchars];
+      for (int i=0; i<maxlrchars; ++i)
+         MemChar[i] = new lrchar[FRowCount];
    }
    if (maxstrings > 0)
    {
@@ -290,13 +288,13 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
    }
    //-----------------------------------------------
    //Началось считывание файл и разбор по словам
-   //char del='\t';    //Это разделитель ' '  '\t'
+   //lrchar del='\t';    //Это разделитель ' '  '\t'
    int p;   //Индекс разделителя
    String word;   //Это отдельные слова
-   int curr, currstr, currint, currchar, currbool;
+   int curr, currstr, currint, currlrchar, currbool;
    for (int i=0; i<FRowCount; ++i)
    {
-      curr=0; currstr=0; currint=0; currchar=0; currbool=0;
+      curr=0; currstr=0; currint=0; currlrchar=0; currbool=0;
       str = file->Strings[i];
       while (str.Length() != 0)  //Вот цикл отделяющий слова
       {
@@ -326,7 +324,7 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
 					case 'I': 	currint++;
 									curr++;
 									goto REPEAT;
-					case 'C': 	currchar++;
+					case 'C': 	currlrchar++;
 									curr++;
 									goto REPEAT;
 					case 'S': 	currstr++;
@@ -339,9 +337,9 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
                            /*printf("d=%d ",MemInt[currint][i]);*/
 									currint++;
                            break;
-					case 'c' :  MemChar[currchar][i]= word.operator [](1);
-                           /*printf("c=%c ", MemChar[currchar][i]);*/
-                           currchar++;
+					case 'c' :  MemChar[currlrchar][i]= word.operator [](1);
+                           /*printf("c=%c ", MemChar[currlrchar][i]);*/
+                           currlrchar++;
 									break;
 					case 's' :  MemStr [currstr][i] = word;
                            /*printf("s=%s ",MemStr[currstr][i]);*/
@@ -358,7 +356,7 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
             switch (format[curr])
             {
                case 'i' :  MemInt [currint][i] = 0; /*printf("d=%d ",MemInt[currint][i]);*/ currint++;  break;
-               case 'c' :  MemChar[currchar][i]= '0'; /*printf("c=%c ", MemChar[currchar][i]);*/ currchar++; break;
+               case 'c' :  MemChar[currlrchar][i]= '0'; /*printf("c=%c ", MemChar[currlrchar][i]);*/ currlrchar++; break;
                case 's' :  MemStr [currstr][i] = ""; /*printf("s=%s ",MemStr[currstr][i]);*/ currstr++; break;
                case 'b' :  MemBool[currbool][i]= false; /*printf("b=%d ",MemBool[currbool][i]);*/ currbool++; break;
                //default :
@@ -369,17 +367,17 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
    }
    delete file;
    /*
-   for (int i=0;i<maxchars;i++)
-    maschar[i][nCount]='\0';
+   for (int i=0;i<maxlrchars;i++)
+    maslrchar[i][nCount]='\0';
    return nCount;
    }   */
    int **intArg;
-   char **charArg;
+   lrchar **lrcharArg;
    UnicodeString **strArg;
    bool **boolArg;
    va_list ap;
    va_start(ap, format);
-   char t = format[0];
+   lrchar t = format[0];
    for (int i=0; t!='\0'; t = format[++i])
    {
       switch (t)
@@ -391,8 +389,8 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
 			break;
 			case 'C':
          case 'c':
-            if ((charArg = va_arg(ap, char**)) != 0)
-					*charArg = MemChar[CharCount++];
+            if ((lrcharArg = va_arg(ap, lrchar**)) != 0)
+					*lrcharArg = MemChar[CharCount++];
 			break;
 			case 'S':
          case 's':
@@ -404,7 +402,7 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
             if ((boolArg = va_arg(ap, bool**)) != 0)
 					*boolArg = MemBool[BoolCount++];
 			break;
-         //default:    va_arg(ap, char);
+         //default:    va_arg(ap, lrchar);
       }
 		//(1)
    }
