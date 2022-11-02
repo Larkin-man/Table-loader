@@ -14,14 +14,7 @@
 #ifndef TableLoaderH
 #define TableLoaderH
 
-typedef wchar_t lrchar;
-
-struct TLSection
-{
-	UnicodeString *Name;
-	int Pos;	//Позиция секции с 0
-	int Size;//Кол-во строк
-};
+typedef char lrchar;
 
 class TableLoader
 {
@@ -38,7 +31,12 @@ private:
 	void AddRowToSection(UnicodeString SectionName, UnicodeString text, int Pos);
 
 protected:    
-	TLSection *FSections;
+	struct Section
+	{
+		UnicodeString *Name;
+      int Pos; //Позиция секции с 0
+		int Size;//Кол-во строк
+   } *FSections;
    void SectionEnsureCapacity(int count);
    int SectionCapacity;
 	int FSectionCount;
@@ -49,8 +47,8 @@ public:
 	__property int RowCount = {read = FRowCount};
    __property int ColCount = {read = FColCount};
 	__property int SectionCount = {read = FSectionCount};
-	__property TLSection* Sections = {read = FSections};
-	TLSection* FindSection(UnicodeString SectionName);
+	__property Section* Sections = {read = FSections};
+	Section* FindSection(UnicodeString SectionName);
 	bool IgnoreFirstString; //Игнорировать первую сроку в файле. defaul=true
 	bool IgnoreDelimitersPack; //Игнорировать разделители, идущие подряд. defauly=true
 	lrchar Delimiter;      //Разделитель столбцов (табуляция)
@@ -63,8 +61,7 @@ public:
 	int RegColumn(lrchar* &Field, int ColNum, const UnicodeString SectionName = "");
 	int RegColumn(UnicodeString* &Field, int ColNum, const UnicodeString SectionName = "");
 	int RegColumn(bool* &Field, int ColNum, const UnicodeString SectionName = "");
-	void GetCount(int &IntCount, int &CharCount, int &BoolCount, int &StrCount);
-	void __fastcall Clear();
+	void GetCount(int &IntCount, int &CharCount, int &BoolCount, int &StrCount);	void __fastcall Clear();
 	__fastcall ~TableLoader();
 };
 #endif

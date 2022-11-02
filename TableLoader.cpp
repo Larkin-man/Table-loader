@@ -168,35 +168,39 @@ int TableLoader::RegColumn(bool* &Field, int ColNum, const UnicodeString Section
 //Загрузка из файла, format: i-int c-lrchar s-Ansi b-bool, ... список ссылок на переменные
 int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *format, ...)
 {
-	TStringList *file = NULL;
-	TResourceStream *ptRes = NULL;
-	try {
-	file = new TStringList;
+	TStringList *file = new TStringList;
 	if (FileOrResource)
 	{
-		//try {
-		file->LoadFromFile(Filename);
-		/*	}catch (...)
-		{  delete file;
-			throw;   }*/
+		try { file->LoadFromFile(Filename);     }
+		catch (...)
+		{
+			delete file;
+			throw;
+		}
 	} else //Resource
 	{
-		//try {
-		ptRes = new TResourceStream(0,Filename, L"RT_RCDATA");
-		file->LoadFromStream(ptRes);
-		//TODO: Добавить кодирование
-		/*} catch (...)
-		{   delete file;
-			throw; 	}*/
-	}
-	if (file->Count <= 1) //????
+
+		try {
+			TResourceStream *ptRes = new TResourceStream(0,Filename, L"RT_RCDATA");
+			file->LoadFromStream(ptRes);
+			delete ptRes;
+		}
+		catch (...)
+		{
+			delete file;
+			throw;
+		}
+   }
+   if (file->Count <= 1)
    {
-		delete file;
-      delete ptRes;
+      delete file;
       return 0;
    }
-	if (FRowCount > 0)
+   if (FRowCount > 0)
+   {//тут должно быть удаление
+      //~TableLoader();
       Clear();
+   }
    //Нужно пробежаться по файлу и удалить лишние строки
    if (IgnoreFirstString)
       file->Delete(0); //Первая лишняя
@@ -205,7 +209,7 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
    for (int i=0; i<file->Count; i++)
    {
       str = file->Strings[i];
-		if (str.Pos("[end]") > 0)
+      if (str == "[end]")
       {
          FRowCount = i;
          break;
@@ -329,7 +333,7 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
 					case 'B': 	currbool++;
 									curr++;
 									goto REPEAT;
-					case 'i' :  MemInt [currint][i] =word.ToIntDef(0);
+					case 'i' :  MemInt [currint][i] = StrToInt(word);
                            /*printf("d=%d ",MemInt[currint][i]);*/
 									currint++;
                            break;
@@ -361,10 +365,10 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
          curr++;
       }
    }
-
+   delete file;
    /*
    for (int i=0;i<maxlrchars;i++)
-	 maslrchar[i][nCount]='\0';
+    maslrchar[i][nCount]='\0';
    return nCount;
    }   */
    int **intArg;
@@ -404,14 +408,7 @@ int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *f
    }
     //throw EDBEditError("fefe");
    va_end(ap);
-		  /////////*/
-	}
-	__finally
-	{
-		delete file;
-		delete ptRes;
-	}
-	return FRowCount;
+   return FRowCount;       /////////*/
 }
 //--------------------------------------------------------------------
 void TableLoader::SectionEnsureCapacity(int count)
@@ -422,18 +419,18 @@ void TableLoader::SectionEnsureCapacity(int count)
       while ( SectionCapacity < count )
          SectionCapacity *= 2;
       if (FSections)
-			FSections = (TLSection*) realloc (FSections, SectionCapacity*sizeof(TLSection));
+         FSections = (Section*) realloc (FSections, SectionCapacity*sizeof(Section));
       else
-         FSections = (TLSection*) malloc (SectionCapacity*sizeof(TLSection));
+         FSections = (Section*) malloc (SectionCapacity*sizeof(Section));
    }
 }
 //--------------------------------------------------------------------
 void __fastcall TableLoader::Clear()
-{  /*
+{
    if (FFormat)
    {
-		free (FFormat);
-		FFormat = NULL;
+      free (FFormat);
+      FFormat = NULL;
    }
    if (FSections)
    {
@@ -477,14 +474,14 @@ void __fastcall TableLoader::Clear()
       StrCount = 0;
    }
    FRowCount = 0;
-	FColCount = 0;   */
+	FColCount = 0;
 }
 //--------------------------------------------------------------------
 void TableLoader::AddRowToSection(UnicodeString SectionName, UnicodeString text, int Pos)
 {
 }
 //--------------------------------------------------------------------
-TLSection* TableLoader::FindSection(UnicodeString SectionName)
+TableLoader::Section* TableLoader::FindSection(UnicodeString SectionName)
 {
    for (int i=0; i<FSectionCount; ++i)
       if (SectionName == *FSections[i].Name)
@@ -502,7 +499,7 @@ void TableLoader::GetCount(int &IntCount, int &CharCount, int &BoolCount, int &S
 //--------------------------------------------------------------------
 __fastcall TableLoader::~TableLoader()
 {
-   //Clear();
+   Clear();
 }
 //-----------------------------------------------------------------------
 #pragma package(smart_init)
