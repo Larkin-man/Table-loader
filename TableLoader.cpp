@@ -7,7 +7,7 @@
 // distributed under the License is distributed on an "AS IS" BASIS,
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//---------------------------------------------------------------------------
+//--------------------------------------------------------------------
 //#include <stdio.h> //для printf
 //#include <stdarg.h>
 //#include <Dialogs.hpp>
@@ -16,7 +16,7 @@
 //#include <UnicodeString>
 #pragma hdrstop
 #include "TableLoader.h"
-//-----------------------------------------------------------------------
+//--------------------------------------------------------------------
 __fastcall TableLoader::TableLoader()
 {
    MemStr  = NULL;
@@ -33,9 +33,9 @@ __fastcall TableLoader::TableLoader()
    FSections = NULL;
    FSectionCount = 0;
    SectionCapacity = 0;
-   FColCount = 0;
+	FColCount = 0;
 }
-//-----------------------------------------------------------------------
+//--------------------------------------------------------------------
 //[секция] ... это список ссылок, также как в LoadFromFile. Возвращает кол-во строк в секции
 int TableLoader::GetSection(const UnicodeString SectionName, ...)
 {
@@ -84,7 +84,7 @@ int TableLoader::GetSection(const UnicodeString SectionName, ...)
    va_end(ap);
    return sSize;
 }
-//-----------------------------------------------------------------------
+//--------------------------------------------------------------------
 int TableLoader::RegColumn(int* &Field, int ColNum, const UnicodeString SectionName)
 {
    --ColNum;
@@ -104,7 +104,7 @@ int TableLoader::RegColumn(int* &Field, int ColNum, const UnicodeString SectionN
       Field = MemInt[ColNum];
    return FRowCount;
 }
-//-----------------------------------------------------------------------
+//--------------------------------------------------------------------
 int TableLoader::RegColumn(char* &Field, int ColNum, const UnicodeString SectionName)
 {
    --ColNum;
@@ -124,7 +124,7 @@ int TableLoader::RegColumn(char* &Field, int ColNum, const UnicodeString Section
       Field = MemChar[ColNum];
    return FRowCount;
 }
-//-----------------------------------------------------------------------
+//--------------------------------------------------------------------
 int TableLoader::RegColumn(UnicodeString* &Field, int ColNum, const UnicodeString SectionName)
 {
    --ColNum;
@@ -144,7 +144,7 @@ int TableLoader::RegColumn(UnicodeString* &Field, int ColNum, const UnicodeStrin
       Field = MemStr[ColNum];
    return FRowCount;
 }
-//-----------------------------------------------------------------------
+//--------------------------------------------------------------------
 int TableLoader::RegColumn(bool* &Field, int ColNum, const UnicodeString SectionName)
 {
    --ColNum;
@@ -164,17 +164,34 @@ int TableLoader::RegColumn(bool* &Field, int ColNum, const UnicodeString Section
       Field = MemBool[ColNum];
    return FRowCount;
 }
-//-----------------------------------------------------------------------
+//--------------------------------------------------------------------
 //Загрузка из файла, format: i-int c-char s-Ansi b-bool, ... список ссылок на переменные
-int TableLoader::LoadFromFile(UnicodeString Filename, const char *format, ...)
+int TableLoader::Load(UnicodeString Filename, bool FileOrResource, const char *format, ...)
 {
-   TStringList *file = new TStringList;
-   try { file->LoadFromFile(Filename);     }
-   catch (...)
-   {
-		delete file;
-		return 0;
-      //throw EFOpenError("Cannot open "+Filename);
+	TStringList *file = new TStringList;
+	if (FileOrResource)
+	{
+		try { file->LoadFromFile(Filename);     }
+		catch (...)
+		{
+			delete file;
+			return 0;
+			//throw EFOpenError("Cannot open "+Filename);
+		}
+	} else //Resource
+	{
+
+		try {
+			TResourceStream *ptRes = new TResourceStream(0,Filename, L"RT_RCDATA");
+			file->LoadFromStream(ptRes);
+			delete ptRes;
+		}
+		catch (...)
+		{
+			delete file;
+			return 0;
+			//throw EFOpenError("Cannot open "+Filename);
+		}
    }
    if (file->Count <= 1)
    {
@@ -233,11 +250,15 @@ int TableLoader::LoadFromFile(UnicodeString Filename, const char *format, ...)
    FFormat = strdup(format);
    for (unsigned int i=0; i<strlen(format); ++i)
       switch (format[i])
-      {
-         case 'i': maxints++; break;
-         case 'c': maxchars++; break;
-         case 's': maxstrings++; break;
-         case 'b': maxbools++; break;
+		{
+			case 'I':
+			case 'i': maxints++; break;
+			case 'C':
+			case 'c': maxchars++; break;
+			case 'S':
+			case 's': maxstrings++; break;
+			case 'B':
+			case 'b': maxbools++; break;
          default: FFormat[i] = '0';
       }
    FColCount += maxints; FColCount += maxchars; FColCount += maxstrings; FColCount += maxbools;
@@ -296,24 +317,37 @@ int TableLoader::LoadFromFile(UnicodeString Filename, const char *format, ...)
             str.Delete(1,p);
          }
          //Слово получено
-         ///printf("%s ",word);
+			///printf("%s ",word);
          try
-         {
+			{
+				REPEAT:
             switch (format[curr])
-            {
-               case 'i' :  MemInt [currint][i] = StrToInt(word);
+				{
+					case 'I': 	currint++;
+									curr++;
+									goto REPEAT;
+					case 'C': 	currchar++;
+									curr++;
+									goto REPEAT;
+					case 'S': 	currstr++;
+									curr++;
+									goto REPEAT;
+					case 'B': 	currbool++;
+									curr++;
+									goto REPEAT;
+					case 'i' :  MemInt [currint][i] = StrToInt(word);
                            /*printf("d=%d ",MemInt[currint][i]);*/
-                           currint++;
+									currint++;
                            break;
-               case 'c' :  MemChar[currchar][i]= word.operator [](1);
+					case 'c' :  MemChar[currchar][i]= word.operator [](1);
                            /*printf("c=%c ", MemChar[currchar][i]);*/
                            currchar++;
-                           break;
-               case 's' :  MemStr [currstr][i] = word;
+									break;
+					case 's' :  MemStr [currstr][i] = word;
                            /*printf("s=%s ",MemStr[currstr][i]);*/
                            currstr++;
                            break;
-               case 'b' :  MemBool[currbool][i]= (word.operator [](1)) == '0' ? false : true;
+					case 'b' :  MemBool[currbool][i]= (word.operator [](1)) == '0' ? false : true;
                            /*printf("b=%d ",MemBool[currbool][i]);*/
                            currbool++;
                            break;
@@ -349,32 +383,36 @@ int TableLoader::LoadFromFile(UnicodeString Filename, const char *format, ...)
    for (int i=0; t!='\0'; t = format[++i])
    {
       switch (t)
-      {
+		{
+			case 'I':
          case 'i':
             if ((intArg = va_arg(ap, int**)) != 0)
-               *intArg = MemInt[IntCount++];
-         break;
+					*intArg = MemInt[IntCount++];
+			break;
+			case 'C':
          case 'c':
             if ((charArg = va_arg(ap, char**)) != 0)
-               *charArg = MemChar[CharCount++];
-         break;
+					*charArg = MemChar[CharCount++];
+			break;
+			case 'S':
          case 's':
             if ((strArg = va_arg(ap, UnicodeString**)) != 0)
-               *strArg = MemStr[StrCount++];
-         break;
+					*strArg = MemStr[StrCount++];
+			break;
+			case 'B':
          case 'b':
             if ((boolArg = va_arg(ap, bool**)) != 0)
-               *boolArg = MemBool[BoolCount++];
-         break;
+					*boolArg = MemBool[BoolCount++];
+			break;
          //default:    va_arg(ap, char);
       }
-      //(1)
+		//(1)
    }
     //throw EDBEditError("fefe");
    va_end(ap);
    return FRowCount;       /////////*/
 }
-//-----------------------------------------------------------------------
+//--------------------------------------------------------------------
 void TableLoader::SectionEnsureCapacity(int count)
 {
    if (count > SectionCapacity)
@@ -388,7 +426,7 @@ void TableLoader::SectionEnsureCapacity(int count)
          FSections = (Section*) malloc (SectionCapacity*sizeof(Section));
    }
 }
-//-----------------------------------------------------------------------
+//--------------------------------------------------------------------
 void __fastcall TableLoader::Clear()
 {
    if (FFormat)
@@ -438,13 +476,13 @@ void __fastcall TableLoader::Clear()
       StrCount = 0;
    }
    FRowCount = 0;
-   FColCount = 0;
+	FColCount = 0;
 }
-//-----------------------------------------------------------------------
+//--------------------------------------------------------------------
 void TableLoader::AddRowToSection(UnicodeString SectionName, UnicodeString text, int Pos)
 {
 }
-//------------------------------------------------------------------------
+//--------------------------------------------------------------------
 TableLoader::Section* TableLoader::FindSection(UnicodeString SectionName)
 {
    for (int i=0; i<FSectionCount; ++i)
@@ -452,7 +490,15 @@ TableLoader::Section* TableLoader::FindSection(UnicodeString SectionName)
          return &FSections[i];
    return NULL;
 }
-//------------------------------------------------------------------------
+//--------------------------------------------------------------------
+void TableLoader::GetCount(int &IntCount, int &CharCount, int &BoolCount, int &StrCount)
+{
+	StrCount = StrCount;
+	IntCount = IntCount;
+	CharCount = CharCount;
+	BoolCount = BoolCount;
+}
+//--------------------------------------------------------------------
 __fastcall TableLoader::~TableLoader()
 {
    Clear();

@@ -8,8 +8,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /******************************************************************\
-* TableLoader - Загрузка таблиц из текстовых файлов. Версия 1.2    *
-* Unicode                                                          *
+* TableLoader - Загрузка таблиц из текстовых файлов. Версия 1.4    *
+* Unicode, LoadFromResource                                        *
 \******************************************************************/
 #ifndef TableLoaderH
 #define TableLoaderH
@@ -23,20 +23,21 @@ private:
    int **MemInt;
    char **MemChar;
    bool **MemBool;
-   int StrCount, IntCount, CharCount, BoolCount;
+	int StrCount, IntCount, CharCount, BoolCount;
    int FRowCount;
-   int FColCount;
+	int FColCount;
+	void AddRowToSection(UnicodeString SectionName, UnicodeString text, int Pos);
 
 protected:    
-   struct Section
-   {
-      UnicodeString *Name;
+	struct Section
+	{
+		UnicodeString *Name;
       int Pos; //Позиция секции с 0
       int Size;//Кол-во строк
    } *FSections;
    void SectionEnsureCapacity(int count);
    int SectionCapacity;
-   int FSectionCount;
+	int FSectionCount;
 
 public:     
    __fastcall TableLoader();
@@ -49,9 +50,8 @@ public:
    bool IgnoreFirstString; //Игнорировать первую сроку в файле. defaul=true
    bool IgnoreDelimitersPack; //Игнорировать разделители, идущие подряд. defauly=true
    char Delimiter;      //Разделитель столбцов (табуляция)
-   void AddRowToSection(UnicodeString SectionName, UnicodeString text, int Pos);
 	//Загрузка из файла, format: i-int c-char s-Unicode b-bool, ... список ссылок на переменные
-   int LoadFromFile(UnicodeString Filename, const char *format, ...);
+	int Load(UnicodeString Filename, bool FileOrResource, const char *format, ...);
 	//GetSection: ... это список ссылок, также как в LoadFromFile. Возвращает кол-во строк в секции
 	int GetSection(const UnicodeString SectionName, ...);
 	//RegColumn - устанавливает ссылку на столбец в секции. ColNum - Номер столбца соотв типа. Возвращает кол-во строк в секции
@@ -59,7 +59,7 @@ public:
    int RegColumn(char* &Field, int ColNum, const UnicodeString SectionName = "");
    int RegColumn(UnicodeString* &Field, int ColNum, const UnicodeString SectionName = "");
    int RegColumn(bool* &Field, int ColNum, const UnicodeString SectionName = "");
-   void __fastcall Clear();
+	void GetCount(int &IntCount, int &CharCount, int &BoolCount, int &StrCount);	void __fastcall Clear();
    __fastcall ~TableLoader();   
 };
 #endif
