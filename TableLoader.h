@@ -8,7 +8,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /******************************************************************\
-* TableLoader - Загрузка таблиц из текстовых файлов. Версия 1.5    *
+* TableLoader - Загрузка таблиц из текстовых файлов. Версия 1.6    *
 * Unicode, LoadFromResource                                        *
 \******************************************************************/
 #ifndef TableLoaderH
