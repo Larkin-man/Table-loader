@@ -30,7 +30,7 @@ private:
 	Char **MemChar;
    bool **MemBool;
 	int StrCount, IntCount, CharCount, BoolCount;
-	int FRowCount;
+   int FRowCount;
 	int FColCount;
 
 protected:    
@@ -65,8 +65,8 @@ public:
 	int RegColumn(String* &Field, int ColNum, const String SectionName = "") const;
 	int RegColumn(bool* &Field, int ColNum, const String SectionName = "") const;
 	void GetCount(int &intCount, int &charCount, int &boolCount, int &strCount) const;
-	void Clear();
-	__fastcall ~TableLoader() { Clear(); };
+	void __fastcall Clear();
+	__fastcall ~TableLoader();
 };
 
 #endif

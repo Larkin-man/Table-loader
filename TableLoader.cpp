@@ -417,9 +417,9 @@ void TableLoader::SectionEnsureCapacity(int count)
    }
 }
 //--------------------------------------------------------------------
-void TableLoader::Clear()
+void __fastcall TableLoader::Clear()
 {
-	if (FFormat)
+   if (FFormat)
    {
 		free (FFormat);
 		FFormat = NULL;
@@ -485,8 +485,9 @@ void TableLoader::GetCount(int &intCount, int &charCount, int &boolCount, int &s
 	boolCount = BoolCount;
 }
 //--------------------------------------------------------------------
-//__fastcall TableLoader::~TableLoader()
-//{
-//}
+__fastcall TableLoader::~TableLoader()
+{
+   Clear();
+}
 //-----------------------------------------------------------------------
 #pragma package(smart_init)
