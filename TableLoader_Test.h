@@ -6,7 +6,7 @@
 #include <Controls.hpp>
 #include <StdCtrls.hpp>
 #include <Forms.hpp>
-//#include "TableLoader.h"
+#include "TableLoader.cpp"
 #include <Grids.hpp>
 #include <Menus.hpp>
 #include <ComCtrls.hpp>
