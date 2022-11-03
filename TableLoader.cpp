@@ -49,7 +49,7 @@ int TableLoader::RealGetSection(int SectionIdx, va_list &args)
 		sPos = FSections[SectionIdx].Pos;
 	}
 	int intCount=0, strCount=0, charCount=0, boolCount=0;
-	int **intArg;  String **strArg;  lrchar **CharArg;  bool **boolArg;
+	int **intArg;  String **strArg;  Char **CharArg;  bool **boolArg;
 	for (unsigned int i=0; i<strlen(FFormat); ++i)
 		switch (FFormat[i])
 		{
@@ -65,7 +65,7 @@ int TableLoader::RealGetSection(int SectionIdx, va_list &args)
 				break;
 			case 'c':
 			case 'C':
-				if ((CharArg = va_arg(args, lrchar**)) != 0)
+				if ((CharArg = va_arg(args, Char**)) != 0)
 					*CharArg = MemChar[charCount++] + sPos;
 				break;
 			case 'b':
@@ -112,7 +112,7 @@ int TableLoader::RegColumn(int* &Field, int ColNum, const String SectionName) co
 	return FRowCount;
 }
 //--------------------------------------------------------------------
-int TableLoader::RegColumn(lrchar* &Field, int ColNum, const String SectionName) const
+int TableLoader::RegColumn(Char* &Field, int ColNum, const String SectionName) const
 {
 	--ColNum;
 	if (ColNum < 0)      return -1;
@@ -256,9 +256,9 @@ void TableLoader::Load(TStringList *list, const char *format)
    }
 	if (CharCount > 0)
    {
-		MemChar = new lrchar*[CharCount];
+		MemChar = new Char*[CharCount];
 		for (int i=0; i<CharCount; ++i)
-         MemChar[i] = new lrchar[FRowCount];
+         MemChar[i] = new Char[FRowCount];
    }
 	if (StrCount > 0)
    {
@@ -348,7 +348,7 @@ void TableLoader::Load(TStringList *list, const char *format)
 	}
 }
 //--------------------------------------------------------------------
-//Загрузка из файла, format: i-int c-lrchar s-Ansi b-bool, ... список ссылок на переменные
+//Загрузка из файла, format: i-int c-Char s-Ansi b-bool, ... список ссылок на переменные
 int TableLoader::LoadFromFile(String Filename, const char *format, ...)
 {
 	TStringList *file = NULL;

@@ -9,11 +9,10 @@
 // limitations under the License.
 /******************************************************************\
 * TableLoader - Загрузка таблиц из текстовых файлов. Версия 1.7    *
-* + typedef char lrchar                                            *
 \******************************************************************/
 #ifndef TableLoaderH
 #define TableLoaderH
-typedef char lrchar;
+
 struct TLSection
 {
 	String *Name;
@@ -28,10 +27,10 @@ private:
 	//Mem обязательно [Count][FRowCount]
 	String **MemStr;
    int **MemInt;
-	lrchar **MemChar;
+	Char **MemChar;
    bool **MemBool;
 	int StrCount, IntCount, CharCount, BoolCount;
-   int FRowCount;
+	int FRowCount;
 	int FColCount;
 
 protected:    
@@ -52,9 +51,9 @@ public:
 	TLSection* FindSection(String SectionName);
 	bool IgnoreFirstString; //Игнорировать первую сроку в файле. defaul=true
 	bool IgnoreDelimitersPack; //Игнорировать разделители, идущие подряд. defauly=true
-	lrchar Delimiter;      //Разделитель столбцов (табуляция)
+	Char Delimiter;      //Разделитель столбцов (табуляция)
    String EndMark; 		//"[end]"
-	//Загрузка, format: i-int c-lrchar s-String b-bool, ... список ссылок на переменные
+	//Загрузка, format: i-int c-Char s-String b-bool, ... список ссылок на переменные
 	int LoadFromFile(String Filename, const char *format, ...);
 	int LoadFromResource(String ResourceName, const char *format, ...);
 	int LoadFromList(TStrings *list, const char *format, ...);
@@ -62,7 +61,7 @@ public:
 	int GetSection(const String SectionName="", ...);
 	//RegColumn - устанавливает ссылку на столбец в секции. ColNum - Номер столбца соотв типа. Возвращает кол-во строк в секции
 	int RegColumn(int* &Field, int ColNum, const String SectionName = "") const;
-	int RegColumn(lrchar* &Field, int ColNum, const String SectionName = "") const;
+	int RegColumn(Char* &Field, int ColNum, const String SectionName = "") const;
 	int RegColumn(String* &Field, int ColNum, const String SectionName = "") const;
 	int RegColumn(bool* &Field, int ColNum, const String SectionName = "") const;
 	void GetCount(int &intCount, int &charCount, int &boolCount, int &strCount) const;
