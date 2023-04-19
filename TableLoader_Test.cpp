@@ -1,7 +1,6 @@
 //---------------------------------------------------------------------------
 
 #include <vcl.h>
-#include "TableLoader.cpp"
 #pragma hdrstop
 
 #include "TableLoader_Test.h"
@@ -38,6 +37,7 @@ void __fastcall TForm1::LoadFromFileBtnClick(TObject *Sender)
 	try {
 	ti.LoadFromFile(Edit1->Text, Edit3->Text.c_str()
 		, &pInt[0], &pInt[1], &pS1, &pChar1, &pBool1, &pS2);
+	//ti.LoadFromFile(Edit1->Text, "0i", &pInt[1] );
 	StatusBar1Click(NULL);
 	}
 	
@@ -105,12 +105,19 @@ void TForm1::Print(int Count)
 	  ti.RegColumn(pInt[3], 2);
 	for (int i=0; i < Count; ++i)
 	{
-		Grid->Cells[0][i] = pInt[0][i];
-		Grid->Cells[1][i] = pInt[3][i]; //pInt3[i]; там рег на 2
-		Grid->Cells[2][i] = pS1[i];
-		Grid->Cells[3][i] = pChar1[i];
-		Grid->Cells[4][i] = (int)pBool1[i];
-		Grid->Cells[5][i] = pS2[i];
+   	if (pInt[0])
+			Grid->Cells[0][i] = pInt[0][i];
+		//Grid->Cells[1][i] = pInt[3][i]; //pInt3[i]; там рег на 2
+      if (pInt[1])
+      	Grid->Cells[1][i] = pInt[1][i]; //pInt3[i]; там рег на 2
+      if (pS1)
+			Grid->Cells[2][i] = pS1[i];
+      if (pChar1)
+			Grid->Cells[3][i] = pChar1[i];
+      if (pBool1)
+			Grid->Cells[4][i] = (int)pBool1[i];
+      if (pS2)
+			Grid->Cells[5][i] = pS2[i];
 	}
 	Sections->Clear();
 	for (int i = 0; i < ti.SectionCount; ++i)
