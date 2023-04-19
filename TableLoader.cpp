@@ -23,8 +23,8 @@ __fastcall TableLoader::TableLoader()
    MemBool = NULL;
    StrCount = 0; IntCount = 0; CharCount = 0; BoolCount = 0;
    FRowCount = 0;
-   IgnoreFirstString = true;
-   IgnoreDelimitersPack = true;
+   IgnoreFirstString = false;
+   IgnoreDelimitersPack = false;
 	FFormat = NULL;
    //Vars = NULL;
    Delimiter = '\t';
@@ -229,7 +229,8 @@ void TableLoader::Load(TStringList *list, const char *format)
    StrCount=0; IntCount=0; CharCount=0; BoolCount=0;
    //Разбор строки формата
 	FFormat = strdup(format);
-	for (unsigned int i=0; i<strlen(FFormat); ++i)
+   int FormatLen = strlen(format);
+	for (int i=0; i<FormatLen; ++i)
 		switch (FFormat[i])
 		{
 			case 'I':
@@ -303,7 +304,9 @@ void TableLoader::Load(TStringList *list, const char *format)
 			try
 			{
 				REPEAT:
-            switch (format[curr])
+            if (curr >= FormatLen)
+         		break;
+            switch (FFormat[curr])
 				{
 					case 'I': 	currInt++;
 									curr++;
@@ -334,7 +337,7 @@ void TableLoader::Load(TStringList *list, const char *format)
 			}
 			catch (...)
          {
-				switch (format[curr])
+				switch (FFormat[curr])
 				{
 					case 'i' :  MemInt [currInt][i] = 0;  currInt++;  break;
 					case 'c' :  MemChar[currChar][i]= '0';  currChar++; break;
@@ -417,9 +420,9 @@ void TableLoader::SectionEnsureCapacity(int count)
    }
 }
 //--------------------------------------------------------------------
-void __fastcall TableLoader::Clear()
+void TableLoader::Clear()
 {
-   if (FFormat)
+	if (FFormat)
    {
 		free (FFormat);
 		FFormat = NULL;
@@ -485,9 +488,8 @@ void TableLoader::GetCount(int &intCount, int &charCount, int &boolCount, int &s
 	boolCount = BoolCount;
 }
 //--------------------------------------------------------------------
-__fastcall TableLoader::~TableLoader()
-{
-   Clear();
-}
+//__fastcall TableLoader::~TableLoader()
+//{
+//}
 //-----------------------------------------------------------------------
 #pragma package(smart_init)
