@@ -347,6 +347,8 @@ void TableLoader::Load(TStringList *list, const char *format)
 				}
 			}
          curr++;
+         if (curr >= FormatLen)
+         	break;
       }
 	}
 }

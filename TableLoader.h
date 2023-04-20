@@ -49,8 +49,8 @@ public:
 	__property int SectionCount = {read = FSectionCount};
 	__property TLSection* Sections = {read = FSections};
 	TLSection* FindSection(String SectionName);
-	bool IgnoreFirstString; //Игнорировать первую сроку в файле. defaul=true
-	bool IgnoreDelimitersPack; //Игнорировать разделители, идущие подряд. defauly=true
+	bool IgnoreFirstString; //Игнорировать первую сроку в файле. default=false
+	bool IgnoreDelimitersPack; //Игнорировать разделители, идущие подряд. default=false
 	Char Delimiter;      //Разделитель столбцов (табуляция)
    String EndMark; 		//"[end]"
 	//Загрузка, format: i-int c-Char s-String b-bool, ... список ссылок на переменные
@@ -65,8 +65,8 @@ public:
 	int RegColumn(String* &Field, int ColNum, const String SectionName = "") const;
 	int RegColumn(bool* &Field, int ColNum, const String SectionName = "") const;
 	void GetCount(int &intCount, int &charCount, int &boolCount, int &strCount) const;
-	void __fastcall Clear();
-	__fastcall ~TableLoader();
+	void Clear();
+	__fastcall ~TableLoader() { Clear(); };
 };
 
 #endif
