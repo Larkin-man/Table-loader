@@ -35,7 +35,7 @@ void __fastcall TForm1::LoadFromFileBtnClick(TObject *Sender)
 	Tick = ::GetTickCount();
 	pInt[3] = NULL;
 	try {
-	ti.LoadFromFile(Edit1->Text, "iiscbs"//Edit3->Text.c_str()
+	ti.LoadFromFile(Edit1->Text, "iiscs"//Edit3->Text.c_str()
 		, &pInt[0], &pInt[1], &pS1, &pChar1, &pBool1, &pS2);
 	//ti.LoadFromFile(Edit1->Text, "0i", &pInt[1] );
 	StatusBar1Click(NULL);
@@ -60,7 +60,7 @@ void __fastcall TForm1::LoadFromListClick(TObject *Sender)
 	pInt[3] = NULL;
 	Tick = ::GetTickCount();
 	try {
-	ti.LoadFromList(Rich->Lines, "iiscbs"//Edit3->Text.c_str()
+	ti.LoadFromList(Rich->Lines, "iiscs"//Edit3->Text.c_str()
 		, &pInt[0], &pInt[1], &pS1, &pChar1, &pBool1, &pS2);
    StatusBar1Click(NULL);
 	//ti.LoadFromFile(Edit1->Text, "si", &pS1, &pId);
