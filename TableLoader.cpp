@@ -291,7 +291,7 @@ void TableLoader::Load(TStringList *list, const char *format)
          }
          p = str.Pos(Delimiter);
          if (p == 0)
-         {
+			{
             word = str;
             str = "";
          }
@@ -322,28 +322,32 @@ void TableLoader::Load(TStringList *list, const char *format)
 									goto REPEAT;
 					case 'i' :  MemInt [currInt][i] = word.ToIntDef(0);
 									currInt++;
-                           break;
-					case 'c' :  MemChar[currChar][i] = word[1];
+									break;
+					case 'c' :  if (word.IsEmpty())
+										MemChar[currChar][i] = 0;
+									else
+										MemChar[currChar][i] = word[1];
                            currChar++;
 									break;
 					case 's' :  MemStr [currStr][i] = word;
 									currStr++;
 									break;
-					case 'b' :  MemBool[currBool][i] = word[1] == '0' ? false : true;
+					case 'b' :  if (word.IsEmpty())
+										MemBool[currBool][i] = false;
+									else
+										MemBool[currBool][i] = word[1] == '0' ? false : true;
 									currBool++;
 									break;
-					//default :
 				}
 			}
 			catch (...)
-         {
+			{
 				switch (FFormat[curr])
 				{
 					case 'i' :  MemInt [currInt][i] = 0;  currInt++;  break;
 					case 'c' :  MemChar[currChar][i]= '0';  currChar++; break;
 					case 's' :  MemStr [currStr][i] = "";  currStr++; break;
 					case 'b' :  MemBool[currBool][i]= false;  currBool++; break;
-					//default :
 				}
 			}
          curr++;
