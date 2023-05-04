@@ -9,9 +9,9 @@
 #pragma resource "*.dfm"
 TForm1 *Form1;
 //---------------------------------------------------------------------------
-__fastcall TForm1::TForm1(TComponent* Owner)
-	: TForm(Owner)
+__fastcall TForm1::TForm1(TComponent* Owner)	: TForm(Owner)
 {
+	ti.IgnoreFirstString = true;
 	IgnoreDelimPack->Checked = ti.IgnoreDelimitersPack;
 	IgnoreFirstString->Checked = ti.IgnoreFirstString;
 	List = NULL;
@@ -35,23 +35,24 @@ void __fastcall TForm1::LoadFromFileBtnClick(TObject *Sender)
 	Tick = ::GetTickCount();
 	pInt[3] = NULL;
 	try {
-	ti.LoadFromFile(Edit1->Text, "iiscs"//Edit3->Text.c_str()
-		, &pInt[0], &pInt[1], &pS1, &pChar1, &pBool1, &pS2);
-	//ti.LoadFromFile(Edit1->Text, "0i", &pInt[1] );
-	StatusBar1Click(NULL);
+//		ti.LoadFromFile(File->Text, "iiscs"//Edit3->Text.c_str()
+//			, &pInt[0], &pInt[1], &pS1, &pChar1, &pBool1, &pS2);
+		ti.LoadFromFile(File->Text, "i0ssics"//Edit3->Text.c_str()
+		, &pInt[0], &pS1, &pBool1, &pInt[1], &pChar1, &pS2);
+		//ti.LoadFromFile(Edit1->Text, "0i", &pInt[1] );
+		StatusBar1Click(NULL);
 	}
-	
-		catch (Exception &exception)
-		{
-			Application->ShowException(&exception);
-			StatusBar1Click(NULL);
-			return;
-		}
+	catch (Exception &exception)
+	{
+		Application->ShowException(&exception);
+		StatusBar1Click(NULL);
+		return;
+	}
 	//Дополнительный столбец
-	if (pInt[2])
-		for (int i = 0; i < ti.RowCount; ++i)
-			pInt[2][i] = i;
-	Print(ti.RowCount);
+//	if (pInt[2])
+//		for (int i = 0; i < ti.RowCount; ++i)
+//			pInt[2][i] = i;
+	//Print(ti.RowCount);
 }
 //---------------------------------------------------------------------------
 //ЗАГРУЗКА С ЛИСТА
@@ -60,9 +61,11 @@ void __fastcall TForm1::LoadFromListClick(TObject *Sender)
 	pInt[3] = NULL;
 	Tick = ::GetTickCount();
 	try {
-	ti.LoadFromList(Rich->Lines, "iiscs"//Edit3->Text.c_str()
-		, &pInt[0], &pInt[1], &pS1, &pChar1, &pBool1, &pS2);
-   StatusBar1Click(NULL);
+	//ti.LoadFromList(Rich->Lines, "iiscs"//Edit3->Text.c_str()
+	//	, &pInt[0], &pInt[1], &pS1, &pChar1, &pBool1, &pS2);
+	ti.LoadFromList(Rich->Lines, "i0ssics"//Edit3->Text.c_str()
+		, &pInt[0], &pS1, &pBool1, &pInt[1], &pChar1, &pS2);
+	StatusBar1Click(NULL);
 	//ti.LoadFromFile(Edit1->Text, "si", &pS1, &pId);
 	//iIiscbCs
 	//ti.Load(Edit1->Text, Edit3->Text.c_str(), &pId, &pI, &pK, &pS1, &ch, &b, &pC, &pS2);
@@ -73,7 +76,7 @@ void __fastcall TForm1::LoadFromListClick(TObject *Sender)
 		StatusBar1Click(NULL);
 		return;
 	}
-	Print(ti.RowCount);
+	Print(ti.RowCount > 1024 ? 1024 : ti.RowCount);
 	RicheD->Checked = false;
 }
 //---------------------------------------------------------------------------
@@ -151,7 +154,7 @@ void __fastcall TForm1::RicheDClick(TObject *Sender)
 		//List->LoadFromFile(Edit1->Text);
 		//List->Assign(Rich->Lines);
 		Rich->Align = alClient;
-		Rich->Lines->LoadFromFile(Edit1->Text);
+		Rich->Lines->LoadFromFile(File->Text);
 	}
 }
 //---------------------------------------------------------------------------

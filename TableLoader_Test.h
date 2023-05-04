@@ -20,7 +20,7 @@ __published:	// IDE-managed Components
 	TMenuItem *GetCount1;
 	TStatusBar *StatusBar1;
 	TPanel *Panel1;
-	TEdit *Edit1;
+	TEdit *File;
 	TEdit *Edit3;
 	TCheckBox *IgnoreDelimPack;
 	TCheckBox *IgnoreFirstString;

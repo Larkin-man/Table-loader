@@ -50,7 +50,7 @@ object Form1: TForm1
     Caption = 'Panel1'
     ShowCaption = False
     TabOrder = 2
-    object Edit1: TEdit
+    object File: TEdit
       Left = 1
       Top = 1
       Width = 127
