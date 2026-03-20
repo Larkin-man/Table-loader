@@ -20,8 +20,9 @@ __fastcall TableLoader::TableLoader()
    MemStr  = NULL;
    MemInt  = NULL;
    MemChar = NULL;
-   MemBool = NULL;
-   StrCount = 0; IntCount = 0; CharCount = 0; BoolCount = 0;
+	MemBool = NULL;
+	MemFloat = NULL;
+	StrCount = 0; IntCount = 0; CharCount = 0; BoolCount = 0; FloatCount = 0;
    FRowCount = 0;
    IgnoreFirstString = false;
    IgnoreDelimitersPack = false;
@@ -48,8 +49,9 @@ int TableLoader::RealGetSection(int SectionIdx, va_list &args)
 		sSize = FSections[SectionIdx].Size;
 		sPos = FSections[SectionIdx].Pos;
 	}
-	int intCount=0, strCount=0, charCount=0, boolCount=0;
+	int intCount=0, strCount=0, charCount=0, boolCount=0, floatCount=0;
 	int **intArg;  String **strArg;  Char **CharArg;  bool **boolArg;
+	float **floatArg;
 	for (unsigned int i=0; i<strlen(FFormat); ++i)
 		switch (FFormat[i])
 		{
@@ -73,6 +75,12 @@ int TableLoader::RealGetSection(int SectionIdx, va_list &args)
 				if ((boolArg = va_arg(args, bool**)) != 0)
 					*boolArg = MemBool[boolCount++] + sPos;
 				break;
+			case 'f':
+			case 'F':
+				if ((floatArg = va_arg(args, float**)) != 0)
+					*floatArg = MemFloat[floatCount++] + sPos;
+				break;
+
 			//default: '0'
 		}
 	va_end(args);
@@ -241,12 +249,15 @@ void TableLoader::Load(TStringList *list, const char *format)
 			case 's': StrCount++; break;
 			case 'B':
 			case 'b': BoolCount++; break;
+			case 'F':
+			case 'd': FloatCount++; break;
          default: FFormat[i] = '0';
 		}
 	FColCount = 0;
 	FColCount += IntCount; FColCount += CharCount; FColCount += StrCount; FColCount += BoolCount;
+	FColCount += FloatCount;
 	if (FColCount == 0)
-   	return;
+		return;
 	//----------------------
 	//Создание массивов по кооличеству строк в файле
 	if (IntCount > 0)
@@ -268,19 +279,25 @@ void TableLoader::Load(TStringList *list, const char *format)
          MemStr[i] = new String[FRowCount];
    }
 	if (BoolCount > 0)
-   {
+	{
 		MemBool = new bool* [BoolCount];
 		for (int i=0; i<BoolCount; ++i)
-         MemBool[i] = new bool[FRowCount];
+			MemBool[i] = new bool[FRowCount];
+	}
+	if (FloatCount > 0)
+	{
+		MemFloat = new float* [FloatCount];
+		for (int i=0; i<FloatCount; ++i)
+			MemFloat[i] = new float[FRowCount];
 	}
 	//-----------------------------------------------
 	//Началось считывание файл и разбор по словам
    int p;   //Индекс разделителя
 	String word;   //Это отдельные слова
-	int curr, currStr, currInt, currChar, currBool;
+	int curr, currStr, currInt, currChar, currBool, currFloat;
    for (int i=0; i<FRowCount; ++i)
 	{
-      curr=0; currStr=0; currInt=0; currChar=0; currBool=0;
+		curr=0; currStr=0; currInt=0; currChar=0; currBool=0; currFloat=0;
       str = list->Strings[i];
 		while (str.IsEmpty() == false)  //Вот цикл отделяющий слова
       {
@@ -338,6 +355,12 @@ void TableLoader::Load(TStringList *list, const char *format)
 										MemBool[currBool][i] = word[1] == '0' ? false : true;
 									currBool++;
 									break;
+					case 'F': 	currFloat++;
+									curr++;
+									goto REPEAT;
+					case 'f' :  MemFloat [currFloat][i] = StrToFloat(word);
+									currFloat++;
+									break;
 				}
 			}
 			catch (...)
@@ -348,6 +371,7 @@ void TableLoader::Load(TStringList *list, const char *format)
 					case 'c' :  MemChar[currChar][i]= '0';  currChar++; break;
 					case 's' :  MemStr [currStr][i] = "";  currStr++; break;
 					case 'b' :  MemBool[currBool][i]= false;  currBool++; break;
+					case 'f' :  MemFloat[currFloat][i]= 0.;  currFloat++; break;
 				}
 			}
          curr++;
@@ -466,14 +490,22 @@ void TableLoader::Clear()
       MemBool = NULL;
       BoolCount = 0;
    }
-   if (StrCount)
-   {
-      for (int i=0; i<StrCount; ++i)
-         delete []MemStr[i];
-      delete []MemStr;
-      MemStr = NULL;
+	if (StrCount)
+	{
+		for (int i=0; i<StrCount; ++i)
+			delete []MemStr[i];
+		delete []MemStr;
+		MemStr = NULL;
 		StrCount = 0;
-   }
+	}
+	if (FloatCount)
+	{
+		for (int i=0; i<FloatCount; ++i)
+			delete []MemFloat[i];
+		delete []MemFloat;
+		MemFloat = NULL;
+		FloatCount = 0;
+	}
    FRowCount = 0;
 	FColCount = 0;
 }

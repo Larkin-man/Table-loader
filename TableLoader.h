@@ -8,7 +8,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 /******************************************************************\
-* TableLoader - Загрузка таблиц из текстовых файлов. Версия 1.8    *
+* TableLoader - Загрузка таблиц из текстовых файлов. Версия 1.9    *
 \******************************************************************/
 #ifndef TableLoaderH
 #define TableLoaderH
@@ -28,8 +28,9 @@ private:
 	String **MemStr;
    int **MemInt;
 	Char **MemChar;
-   bool **MemBool;
-	int StrCount, IntCount, CharCount, BoolCount;
+	bool **MemBool;
+	float **MemFloat;
+	int StrCount, IntCount, CharCount, BoolCount, FloatCount;
    int FRowCount;
 	int FColCount;
 
