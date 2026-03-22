@@ -9,12 +9,14 @@
 // limitations under the License.
 
 //---------------------------------------------------------------------------
-#include <vcl.h>
+#include <System.Classes.hpp>
+#include <System.SysUtils.hpp>
+//#include <windows.h>
 #pragma hdrstop
 //---------------------------------------------------------------------------
 #include "TableLoader.h"
-#include <System.IOUtils.hpp>
-#include <memory.h>
+#include <System.IOUtils.hpp>   // Р”Р»СЏ FileExists
+#include <memory.h>             // Р”Р»СЏ memset/memcpy
 //---------------------------------------------------------------------------
 
 __fastcall TableLoader::TableLoader()
@@ -24,7 +26,7 @@ __fastcall TableLoader::TableLoader()
 	MemChar = NULL;
 	MemBool = NULL;
 	MemFloat = NULL;
-	
+
 	StrCount = 0;
 	IntCount = 0;
 	CharCount = 0;
@@ -103,7 +105,7 @@ int TableLoader::RealGetSection(int SectionIdx, va_list& args)
 					*boolArg = MemBool[boolCount++] + sPos;
 				break;
 			case 'f':
-			case 'F':		 // НОВОЕ: поддержка float
+			case 'F':		 // РќРћР’РћР•: РїРѕРґРґРµСЂР¶РєР° float
 				if ((floatArg = va_arg(args, float**)) != NULL)
 					*floatArg = MemFloat[floatCount++] + sPos;
 				break;
@@ -144,7 +146,7 @@ int __cdecl TableLoader::GetSection(String SectionName, ...)
 
 int __cdecl TableLoader::RegColumn(int*& Field, int ColNum, String SectionName)
 {
-	ColNum--;   // Конвертация из 1-based в 0-based
+	ColNum--;   // РљРѕРЅРІРµСЂС‚Р°С†РёСЏ РёР· 1-based РІ 0-based
 	
 	if (ColNum < 0 || ColNum >= IntCount)
 		return -1;
@@ -283,7 +285,7 @@ void TableLoader::Load(TStringList* list, const char* format)
 	
 	if (list == NULL || list->Count == 0)
 	{
-		FLastError = "Список строк пуст";
+		FLastError = "РЎРїРёСЃРѕРє СЃС‚СЂРѕРє РїСѓСЃС‚";
 		return;
 	}
 	
@@ -298,7 +300,7 @@ void TableLoader::Load(TStringList* list, const char* format)
 	if (FRowCount > 0)
 		Clear();
 	
-	// Нужно пробежаться по файлу и удалить лишние строки и посчитать FRowCount
+	// РќСѓР¶РЅРѕ РїСЂРѕР±РµР¶Р°С‚СЊСЃСЏ РїРѕ С„Р°Р№Р»Сѓ Рё СѓРґР°Р»РёС‚СЊ Р»РёС€РЅРёРµ СЃС‚СЂРѕРєРё Рё РїРѕСЃС‡РёС‚Р°С‚СЊ FRowCount
 	FRowCount = -1;
 	String str;
 	bool EndIsPossible = !EndMark.IsEmpty();
@@ -314,14 +316,14 @@ void TableLoader::Load(TStringList* list, const char* format)
 			continue;
 		}
 		
-		// EndMark проверяем только в начале строки
+		// EndMark РїСЂРѕРІРµСЂСЏРµРј С‚РѕР»СЊРєРѕ РІ РЅР°С‡Р°Р»Рµ СЃС‚СЂРѕРєРё
 		if (EndIsPossible && (str.Pos(EndMark) == 1))
 		{
 			FRowCount = i;
 			break;
 		}
 		
-		// Проверка на секцию [name]
+		// РџСЂРѕРІРµСЂРєР° РЅР° СЃРµРєС†РёСЋ [name]
 		if ((!str.IsEmpty()) && (str[1] == '[') && (str.Pos(']') > 0))
 		{
 			SectionEnsureCapacity(FSectionCount + 1);
@@ -340,7 +342,7 @@ void TableLoader::Load(TStringList* list, const char* format)
 	if (FRowCount == 0)
 		return;
 	
-	// Установить размер секций
+	// РЈСЃС‚Р°РЅРѕРІРёС‚СЊ СЂР°Р·РјРµСЂ СЃРµРєС†РёР№
 	if (FSectionCount > 0)
 	{
 		for (int i = 0; i < FSectionCount - 1; ++i)
@@ -354,7 +356,7 @@ void TableLoader::Load(TStringList* list, const char* format)
 	BoolCount = 0;
 	FloatCount = 0;
 	
-	// Разбор строки формата
+	// Р Р°Р·Р±РѕСЂ СЃС‚СЂРѕРєРё С„РѕСЂРјР°С‚Р°
 	FFormat = strdup(format);
 	int FormatLen = strlen(format);
 	
@@ -381,7 +383,7 @@ void TableLoader::Load(TStringList* list, const char* format)
 	if (FColCount == 0)
 		return;
 	
-	// Создание массивов по количеству строк в файле
+	// РЎРѕР·РґР°РЅРёРµ РјР°СЃСЃРёРІРѕРІ РїРѕ РєРѕР»РёС‡РµСЃС‚РІСѓ СЃС‚СЂРѕРє РІ С„Р°Р№Р»Рµ
 	if (IntCount > 0)
 	{
 		MemInt = new int*[IntCount];
@@ -417,7 +419,7 @@ void TableLoader::Load(TStringList* list, const char* format)
 			MemFloat[i] = new float[FRowCount];
 	}
 	
-	// Начало считывания файла и разбор по словам
+	// РќР°С‡Р°Р»Рѕ СЃС‡РёС‚С‹РІР°РЅРёСЏ С„Р°Р№Р»Р° Рё СЂР°Р·Р±РѕСЂ РїРѕ СЃР»РѕРІР°Рј
 	int p;
 	String word;
 	int curr = 0, currStr = 0, currInt = 0, currChar = 0, currBool = 0, currFloat = 0;
@@ -435,7 +437,7 @@ void TableLoader::Load(TStringList* list, const char* format)
 		
 		while (!str.IsEmpty())
 		{
-			// проверяем первый символ
+			// РїСЂРѕРІРµСЂСЏРµРј РїРµСЂРІС‹Р№ СЃРёРјРІРѕР»
 			if (IgnoreDelimitersPack && (!str.IsEmpty()) && (str[1] == Delimiter))
 			{
 				str.Delete(1, 1);
@@ -455,7 +457,7 @@ void TableLoader::Load(TStringList* list, const char* format)
 				str.Delete(1, p);
 			}
 			
-			// Слово получено
+			// РЎР»РѕРІРѕ РїРѕР»СѓС‡РµРЅРѕ
 			try
 			{
 				while (curr < FormatLen)
@@ -518,14 +520,14 @@ void TableLoader::Load(TStringList* list, const char* format)
 			}
 			catch (const Exception& e)
 			{
-				// Обработка ошибок парсинга с установкой значений по умолчанию
+				// РћР±СЂР°Р±РѕС‚РєР° РѕС€РёР±РѕРє РїР°СЂСЃРёРЅРіР° СЃ СѓСЃС‚Р°РЅРѕРІРєРѕР№ Р·РЅР°С‡РµРЅРёР№ РїРѕ СѓРјРѕР»С‡Р°РЅРёСЋ
 				switch (FFormat[curr])
 				{
 					case 'i': MemInt[currInt][i] = 0; currInt++; break;
 					case 'c': MemChar[currChar][i] = '\0'; currChar++; break;
 					case 's': MemStr[currStr][i] = ""; currStr++; break;
 					case 'b': MemBool[currBool][i] = false; currBool++; break;
-					case 'f': MemFloat[currFloat][i] = 0.0f; currFloat++; break;  // НОВОЕ
+					case 'f': MemFloat[currFloat][i] = 0.0f; currFloat++; break;  // РќРћР’РћР•
 				}
 			}
 			
@@ -539,17 +541,17 @@ void TableLoader::Load(TStringList* list, const char* format)
 
 int __cdecl  TableLoader::LoadFromFile(String Filename, const char* format, ...)
 {
-	// проверка существования файла
+	// РїСЂРѕРІРµСЂРєР° СЃСѓС‰РµСЃС‚РІРѕРІР°РЅРёСЏ С„Р°Р№Р»Р°
 	if (!FileExists(Filename))
 	{
-		FLastError = "Файл не найден: " + Filename;
+		FLastError = "Р¤Р°Р№Р» РЅРµ РЅР°Р№РґРµРЅ: " + Filename;
 		return 0;
 	}
 	
-	// проверка формата
+	// РїСЂРѕРІРµСЂРєР° С„РѕСЂРјР°С‚Р°
 	if (format == NULL || strlen(format) == 0)
 	{
-		FLastError = "Неверный формат загрузки";
+		FLastError = "РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ Р·Р°РіСЂСѓР·РєРё";
 		return 0;
 	}
 	
@@ -565,7 +567,7 @@ int __cdecl  TableLoader::LoadFromFile(String Filename, const char* format, ...)
 		va_list ap;
 		va_start(ap, format);
 		RealGetSection(-1, ap);
-		// va_end вызывается в RealGetSection
+		// va_end РІС‹Р·С‹РІР°РµС‚СЃСЏ РІ RealGetSection
 	}
 	__finally
 	{
@@ -578,10 +580,10 @@ int __cdecl  TableLoader::LoadFromFile(String Filename, const char* format, ...)
 //---------------------------------------------------------------------------
 int __cdecl TableLoader::LoadFromResource(String ResourceName, const char* format, ...)
 {
-	// проверка формата
+	// РїСЂРѕРІРµСЂРєР° С„РѕСЂРјР°С‚Р°
 	if (format == NULL || strlen(format) == 0)
 	{
-		FLastError = "Неверный формат загрузки";
+		FLastError = "РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ Р·Р°РіСЂСѓР·РєРё";
 		return 0;
 	}
 
@@ -589,7 +591,7 @@ int __cdecl TableLoader::LoadFromResource(String ResourceName, const char* forma
 	TResourceStream* resStream = NULL;
 	try
 	{
-		// правильное создание TResourceStream
+		// РїСЂР°РІРёР»СЊРЅРѕРµ СЃРѕР·РґР°РЅРёРµ TResourceStream
 		resStream = new TResourceStream((NativeUInt)HInstance, ResourceName, (System::WideChar*)RT_RCDATA);
 		//resStream = new TResourceStream(HInstance, ResourceName, RT_RCDATA);
 
@@ -616,16 +618,16 @@ int __cdecl TableLoader::LoadFromResource(String ResourceName, const char* forma
 
 int __cdecl TableLoader::LoadFromList(TStrings* list, const char* format, ...)
 {
-	// проверка формата
+	// РїСЂРѕРІРµСЂРєР° С„РѕСЂРјР°С‚Р°
 	if (format == NULL || strlen(format) == 0)
 	{
-		FLastError = "Неверный формат загрузки";
+		FLastError = "РќРµРІРµСЂРЅС‹Р№ С„РѕСЂРјР°С‚ Р·Р°РіСЂСѓР·РєРё";
 		return 0;
 	}
 	
 	if (list == NULL)
 	{
-		FLastError = "Список строк пуст";
+		FLastError = "РЎРїРёСЃРѕРє СЃС‚СЂРѕРє РїСѓСЃС‚";
 		return 0;
 	}
 	
@@ -650,7 +652,7 @@ void TableLoader::SectionEnsureCapacity(int count)
 		
 		TLSection* newSections = new TLSection[newCapacity];
 		
-		// Копируем старые данные
+		// РљРѕРїРёСЂСѓРµРј СЃС‚Р°СЂС‹Рµ РґР°РЅРЅС‹Рµ
 		if (FSections != NULL)
 		{
 			for (int i = 0; i < FSectionCount; ++i)
@@ -660,7 +662,7 @@ void TableLoader::SectionEnsureCapacity(int count)
 			delete[] FSections;
 		}
 		
-		// Инициализируем новые элементы
+		// РРЅРёС†РёР°Р»РёР·РёСЂСѓРµРј РЅРѕРІС‹Рµ СЌР»РµРјРµРЅС‚С‹
 		for (int i = FSectionCount; i < newCapacity; ++i)
 		{
 			newSections[i].Name = NULL;
